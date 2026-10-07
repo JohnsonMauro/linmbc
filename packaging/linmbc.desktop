@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=LinMBC
+GenericName=Mouse Button Control
+Comment=Per-game mouse button remapping
+Exec=linmbc
+Icon=linmbc
+Terminal=false
+Categories=Settings;HardwareSettings;
+Keywords=mouse;buttons;remap;macro;game;
+StartupWMClass=linmbc

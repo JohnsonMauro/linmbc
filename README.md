@@ -1,3 +1,5 @@
+<p align="center"><img src="src/linmbc/icons/linmbc.svg" width="112" alt="LinMBC logo"></p>
+
 # LinMBC
 
 Per-application mouse button remapping for Linux (Wayland first), inspired by
