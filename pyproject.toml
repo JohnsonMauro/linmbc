@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=70"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "linmbc"
+version = "0.0.1"
+description = "Per-application mouse button remapping for Linux (Wayland first)"
+readme = "README.md"
+requires-python = ">=3.12"
+# Runtime deps come from system packages (python-evdev, pyside6); see CLAUDE.md.
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-qt", "ruff"]
+
+[project.scripts]
+linmbc-daemon = "linmbc.daemon:main"
+linmbc = "linmbc.gui.app:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+linmbc = ["kwin/*.js", "locales/*.json", "flags/*.svg", "flags/LICENSE-flag-icons", "flags/README.md", "icons/*.svg"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# PyGObject 3.58 on Python 3.14 warns about asyncio policies from inside gi.
+filterwarnings = ["ignore::DeprecationWarning:gi.*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM"]
