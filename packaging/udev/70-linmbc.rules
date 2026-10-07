@@ -1,4 +1,5 @@
 # Grant the logged-in seat user read access to mouse event devices only.
 # Keyboards stay root:input, so LinMBC can never read keystrokes.
+# Nodes that are both mouse and keyboard (some combo receivers) are excluded.
 # Must sort before 73-seat-late.rules, where the uaccess tag is applied.
-SUBSYSTEM=="input", KERNEL=="event*", ENV{ID_INPUT_MOUSE}=="1", TAG+="uaccess"
+SUBSYSTEM=="input", KERNEL=="event*", ENV{ID_INPUT_MOUSE}=="1", ENV{ID_INPUT_KEYBOARD}!="1", TAG+="uaccess"
