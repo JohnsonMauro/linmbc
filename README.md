@@ -48,6 +48,20 @@ Requirements: Python 3.12+, `python-evdev`, PySide6, `dbus-python`, PyGObject.
 
 ### Arch Linux / CachyOS
 
+Prebuilt package from the
+[latest release](https://github.com/JohnsonMauro/linmbc/releases/latest):
+download the `.pkg.tar.zst` (and its `.sha256`), then
+
+```bash
+sha256sum -c linmbc-*.pkg.tar.zst.sha256
+sudo pacman -U linmbc-*.pkg.tar.zst
+```
+
+The package is not signed, so install it from the downloaded file
+(`pacman -U <url>` requires a signature by default).
+
+Or build it yourself:
+
 ```bash
 git clone https://github.com/JohnsonMauro/linmbc.git
 cd linmbc/packaging/arch
@@ -67,8 +81,8 @@ systemctl --user enable --now linmbc.service
 Open **LinMBC** from the application menu (if the daemon is not running, the
 app starts it) and switch it **On**. The daemon remembers that choice.
 
-To update, pull and run `makepkg -si` again, then
-`systemctl --user restart linmbc.service`.
+To update, install the new release's package (or pull and run `makepkg -si`
+again), then `systemctl --user restart linmbc.service`.
 
 ### Other distributions
 
