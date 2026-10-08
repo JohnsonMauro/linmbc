@@ -8,30 +8,102 @@ for Windows.
 
 LinMBC is an independent project and is not affiliated with Highrez.
 
-> **Status:** early development. Nothing to install yet.
+> **Status:** early, but usable on KDE Plasma 6 (Wayland). Tested on CachyOS
+> with Last Epoch (Steam/Proton).
 
-## Goals
+## What it does
 
-- Remap mouse buttons per application, switching profiles automatically when
-  the focused window changes (e.g. a different layout per ARPG), with a manual
-  override from the tray or a hotkey.
-- Actions: button → key/combo, shift layers (hold a button to change what the
-  others do), turbo (repeat while held), and macros/sequences.
-- A GUI profile editor: press the button you want to remap, pick the action.
-- Works on Wayland. KDE Plasma is the first target.
+- Remaps the buttons of any evdev mouse to keys or key combos, per game.
+- Each button can **hold** the keys, press them **once**, **toggle** a loop
+  (until clicked again) or **repeat** them N times, with a fixed or random
+  delay.
+- Switches profiles automatically when the focused window changes (KDE
+  Plasma). Outside a game the `Default` profile applies.
+- "Add game" lists your installed Steam games.
+- Every physical mouse is used automatically, including hotplug.
+- GUI in English, Português (Brasil), Español, Français, Deutsch, Русский,
+  Polski, 日本語, 한국어 and 简体中文 (machine translated, review welcome).
 
-## How it works (planned)
+Planned: shift layers, key sequences, a tray icon and a manual profile switch.
+
+## Supported systems
+
+| | |
+|---|---|
+| **Tested** | Arch Linux / CachyOS, KDE Plasma 6 on Wayland, systemd |
+| **Works, with a limit** | Other desktops: buttons are remapped, but only with the `Default` profile (the focused window is read through KWin) |
+| **Not tested yet** | Other distributions (Debian/Ubuntu, Fedora, openSUSE…), Plasma on X11 |
+| **Not supported** | Distributions without systemd-logind (the device permission rule relies on `uaccess`); headless systems |
+
+Requirements: Python 3.12+, `python-evdev`, PySide6, `dbus-python`, PyGObject.
+
+## Install
+
+### Arch Linux / CachyOS
+
+```bash
+git clone https://github.com/JohnsonMauro/linmbc.git
+cd linmbc/packaging/arch
+makepkg -si
+```
+
+The package installs the app, the udev rule that gives your user access to
+mice (and only mice), a systemd user service, the menu entry and the icon.
+pacman reloads udev for you.
+
+Then start the daemon now and at every login:
+
+```bash
+systemctl --user enable --now linmbc.service
+```
+
+Open **LinMBC** from the application menu (if the daemon is not running, the
+app starts it) and switch it **On**. The daemon remembers that choice.
+
+To update, pull and run `makepkg -si` again, then
+`systemctl --user restart linmbc.service`.
+
+### Other distributions
+
+Not packaged or tested yet. What a package needs, from `packaging/`:
+
+- `udev/70-linmbc.rules` → `/usr/lib/udev/rules.d/`
+- `systemd/linmbc.service` → `/usr/lib/systemd/user/` (expects `/usr/bin/linmbc-daemon`)
+- `linmbc.desktop` → `/usr/share/applications/`, and
+  `src/linmbc/icons/linmbc.svg` → `/usr/share/icons/hicolor/scalable/apps/`
+
+### Uninstall
+
+```bash
+systemctl --user disable --now linmbc.service
+sudo pacman -R linmbc
+```
+
+Your profiles stay in `~/.config/linmbc/`; delete that folder to remove them.
+
+## Files
+
+| What | Where |
+|---|---|
+| Profiles (one TOML file per game) | `~/.config/linmbc/profiles/` |
+| Daemon settings | `~/.config/linmbc/config.toml` |
+| Daemon log | `~/.local/state/linmbc/daemon.log` |
+
+## How it works
 
 ```
-mouse ──evdev──▶ linmbc daemon ──uinput──▶ virtual device ──▶ compositor/apps
+mouse ──evdev──▶ linmbc-daemon ──uinput──▶ virtual mouse + keyboard ──▶ compositor/apps
                      ▲
-     KWin script ────┘ (D-Bus: active window class → profile)
+     KWin script ────┘ (D-Bus: focused window → profile)
                      ▲
-     Qt GUI / tray ──┘ (edit profiles, override active profile)
+     LinMBC (GUI) ───┘ (D-Bus: on/off, state; edits the profile files)
 ```
 
-- The daemon grabs **only mouse devices** and never reads keyboards.
-- Profiles are plain text files, one per application.
+- The daemon runs as a systemd user service, so remapping keeps working after
+  the GUI is closed.
+- It reads **mouse devices only** and never opens a keyboard.
+- If anything goes wrong it releases every mouse, so your mouse goes back to
+  normal.
 
 ## A note on games
 
@@ -39,6 +111,22 @@ Remapping one button to another key is a 1:1 input change. Macros and turbo
 send several inputs per press, which some online games forbid in their terms of
 service. Check the rules of the game before using them.
 
+## Development
+
+```bash
+python3 -m venv --system-site-packages .venv && .venv/bin/pip install -e '.[dev]'
+.venv/bin/pytest
+.venv/bin/linmbc-daemon     # foreground; Ctrl+C releases every mouse
+.venv/bin/linmbc
+```
+
+The udev rule must be installed (or the package) for the daemon to open the
+mouse. `makepkg` packages the **committed** HEAD only: commit before building
+to include local changes. With the package installed, the GUI starts the packaged daemon through
+systemd; to run a checkout, stop the service and start `.venv/bin/linmbc-daemon`
+first.
+
 ## License
 
-Not chosen yet.
+[MIT](LICENSE). Flag icons from [flag-icons](https://github.com/lipis/flag-icons)
+(MIT).

@@ -30,6 +30,9 @@ reference them from tracked code.
 | Languages | GUI in en, pt-BR, es, fr, de, ru, pl, ja, ko, zh-CN: the set ≥4 of 7 ARPGs ship on Steam (store API, 2026-10-07). JSON catalogs in `src/linmbc/locales/`; machine-translated, native review pending. Picker shows SVG flags vendored from lipis/flag-icons v7.5.0 (MIT, `src/linmbc/flags/`); English = US flag |
 | Games | "Add game" lists installed Steam games (`libraryfolders.vdf` + `appmanifest_*.acf`); match `steam_app_<appid>` |
 | Buttons sent as keyboard keys (Razer Naga keypad, firmware-programmed buttons) | opt-in per device only — see Security rules |
+| License | MIT (user, 2026-10-07). `pyproject.toml` declares it (PEP 639, setuptools ≥77) with the vendored flag-icons licence |
+| Distribution | Target: desktop distros with a graphical session. Only Arch/CachyOS is packaged and tested (`packaging/arch/PKGBUILD`, builds the committed HEAD of the checkout). Other distros stay pending until tested in a real environment |
+| Daemon start | systemd user unit `linmbc.service` (`Type=dbus`, `WantedBy=graphical-session.target`). The GUI runs `systemctl --user --no-block start linmbc.service` and falls back to spawning `sys.executable -m linmbc.daemon` (source checkout) |
 | Why not xremap | it covers the engine, but switching layouts per game means editing YAML and restarting; the point here is a GUI + quick profile switching |
 
 ## Security rules
@@ -83,8 +86,13 @@ python3 -m venv --system-site-packages .venv && .venv/bin/pip install -e '.[dev]
 .venv/bin/pytest            # tests, no device access needed
 .venv/bin/ruff check . && .venv/bin/ruff format --check .
 .venv/bin/linmbc-daemon     # runs in the foreground; Ctrl+C releases every mouse
-.venv/bin/linmbc            # GUI; "Start daemon" spawns a detached daemon
+.venv/bin/linmbc            # GUI; starts linmbc.service if installed, else spawns the checkout
+cd packaging/arch && makepkg -si   # Arch package from the committed HEAD
 ```
+
+With the package installed, the GUI starts the packaged daemon: stop
+`linmbc.service` before running a checkout's daemon. `makepkg` rewrites
+`pkgver=` in the PKGBUILD; do not commit that change.
 
 ## Layout
 
@@ -137,6 +145,9 @@ GUI facts (verified 2026-10-07, KDE Plasma Wayland, PySide6 6.11.2):
 3. **KWin script + D-Bus:** done (2026-10-07). Verified in Last Epoch: the
    window reports `steam_app_899770` and remapped keys reach the game.
 4. **GUI + tray.**
-5. **Packaging:** udev rule, systemd user service, install docs.
+5. **Packaging:** Arch package done (2026-10-07): udev rule, systemd user
+   service, .desktop, icon, licences; `makepkg` + `check()` verified in a
+   scratch clone. Not yet: installing it with pacman and a login with the
+   service enabled; packages for other distros.
 
 Detailed roadmap: `../linmbc.local-context/roadmap/roadmap.md`.
