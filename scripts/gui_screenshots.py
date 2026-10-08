@@ -25,7 +25,20 @@ from linmbc.profile import Action, Delay, Mode, Profile
 from linmbc.profile_store import ProfileStore
 
 BUTTONS = ["BTN_LEFT", "BTN_RIGHT", "BTN_MIDDLE", "BTN_SIDE", "BTN_EXTRA"]
-LAST_EPOCH = Game("Last Epoch", ("steam_app_899770",))
+# Generic game profiles: the website shows no real game names or app ids.
+WINDOW = "steam_app_…"
+GAME_NAMES = {
+    "en": ("Game A", "Game B"),
+    "pt_BR": ("Jogo A", "Jogo B"),
+    "es": ("Juego A", "Juego B"),
+    "fr": ("Jeu A", "Jeu B"),
+    "de": ("Spiel A", "Spiel B"),
+    "ru": ("Игра A", "Игра B"),
+    "pl": ("Gra A", "Gra B"),
+    "ja": ("ゲーム A", "ゲーム B"),
+    "ko": ("게임 A", "게임 B"),
+    "zh_CN": ("游戏 A", "游戏 B"),
+}
 LOOP = Action((e.KEY_LEFTCTRL, e.KEY_2), Mode.TOGGLE, delay=Delay(80, 140))
 
 
@@ -55,13 +68,13 @@ class FakeDaemon(QObject):
         return True
 
 
-def sample_store(directory: Path) -> ProfileStore:
+def sample_store(directory: Path, game: str, other: str) -> ProfileStore:
     store = ProfileStore(directory)
     store.save(Profile("Default"))
     store.save(
         Profile(
-            "Last Epoch",
-            LAST_EPOCH.match,
+            game,
+            (WINDOW,),
             {
                 e.BTN_SIDE: Action((e.KEY_Q,)),
                 e.BTN_EXTRA: LOOP,
@@ -69,34 +82,35 @@ def sample_store(directory: Path) -> ProfileStore:
             },
         )
     )
-    store.save(Profile("Path of Exile 2", ("steam_app_2694490",)))
+    store.save(Profile(other, (WINDOW,)))
     return store
 
 
 def render(app: QApplication, language: str, out: Path) -> None:
     i18n.set_language(language)
+    game, other = GAME_NAMES[language]
     daemon = FakeDaemon()
     tmp = Path(tempfile.mkdtemp(prefix="linmbc-shots-"))
     win = MainWindow(
         daemon,
-        sample_store(tmp / "profiles"),
+        sample_store(tmp / "profiles", game, other),
         GuiSettings(language=language),
         tmp / "gui.toml",
-        games=lambda: [LAST_EPOCH],
+        games=lambda: [Game(game, (WINDOW,))],
     )
     daemon.state_changed.emit(
         {
             "enabled": True,
             "default_profile": "Default",
-            "active_profile": "Last Epoch",
-            "window_class": LAST_EPOCH.match[0],
-            "profiles": ["Default", "Last Epoch", "Path of Exile 2"],
+            "active_profile": game,
+            "window_class": WINDOW,
+            "profiles": ["Default", game, other],
             "mice": ["WLMOUSE Mini Pro 8K"],
             "buttons": BUTTONS,
             "log_path": "",
         }
     )
-    win._fill_profiles(select="Last Epoch")
+    win._fill_profiles(select=game)
     win.resize(980, 430)
     win.show()
     app.processEvents()
