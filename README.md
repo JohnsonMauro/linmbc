@@ -8,9 +8,9 @@ for Windows.
 
 LinMBC is an independent project and is not affiliated with Highrez.
 
-> **Status:** alpha (0.1.0a1). Usable on KDE Plasma 6 (Wayland); tested on
-> CachyOS with Last Epoch (Steam/Proton). Expect rough edges and please
-> [report what breaks](https://github.com/JohnsonMauro/linmbc/issues).
+> **Status:** alpha (0.1.0a2). Usable on KDE Plasma 6 (Wayland); tested on
+> CachyOS with Last Epoch (Steam/Proton) and Diablo IV (Lutris). Expect rough
+> edges and please [report what breaks](https://github.com/JohnsonMauro/linmbc/issues).
 
 Website: <https://johnsonmauro.github.io/linmbc-site/>
 
