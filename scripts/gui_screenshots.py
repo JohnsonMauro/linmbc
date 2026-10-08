@@ -27,6 +27,8 @@ from linmbc.profile_store import ProfileStore
 BUTTONS = ["BTN_LEFT", "BTN_RIGHT", "BTN_MIDDLE", "BTN_SIDE", "BTN_EXTRA"]
 # Generic game profiles: the website shows no real game names or app ids.
 WINDOW = "steam_app_…"
+# Generic device name: no real mouse model in the pictures.
+MOUSE = "Gaming Mouse"
 GAME_NAMES = {
     "en": ("Game A", "Game B"),
     "pt_BR": ("Jogo A", "Jogo B"),
@@ -105,7 +107,7 @@ def render(app: QApplication, language: str, out: Path) -> None:
             "active_profile": game,
             "window_class": WINDOW,
             "profiles": ["Default", game, other],
-            "mice": ["WLMOUSE Mini Pro 8K"],
+            "mice": [MOUSE],
             "buttons": BUTTONS,
             "log_path": "",
         }
