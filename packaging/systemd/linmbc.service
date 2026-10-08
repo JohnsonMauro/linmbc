@@ -1,0 +1,19 @@
+# LinMBC remapping daemon, one per graphical session.
+# Enable once per user: systemctl --user enable --now linmbc.service
+# Stopping it (or the GUI's Off/Quit) releases every mouse.
+[Unit]
+Description=LinMBC mouse button remapping daemon
+Documentation=https://github.com/JohnsonMauro/linmbc
+# Needs the session bus and, on KDE, KWin for automatic profile switching.
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=dbus
+BusName=io.github.johnsonmauro.LinMBC
+ExecStart=/usr/bin/linmbc-daemon
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=graphical-session.target

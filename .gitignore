@@ -1,12 +1,29 @@
+# Python bytecode: compiled modules written next to the sources on import
 __pycache__/
 *.py[cod]
+
+# Packaging metadata from `pip install -e .`
 *.egg-info/
+
+# Virtual environments (.venv is the one CLAUDE.md creates)
 .venv/
 venv/
+
+# Build output from `python -m build` / setuptools
 build/
 dist/
+
+# Test runs: pytest cache, coverage data and its HTML report
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Linter / type-checker caches
 .mypy_cache/
 .ruff_cache/
+
+# makepkg work dirs and built packages (packaging/arch)
+packaging/arch/src/
+packaging/arch/pkg/
+packaging/arch/linmbc/
+packaging/arch/*.pkg.tar.*

@@ -1,0 +1,15 @@
+post_install() {
+  echo ":: LinMBC: start the daemon now and at every login with"
+  echo "     systemctl --user enable --now linmbc.service"
+  echo ":: Opening LinMBC from the menu also starts it (without enabling it)."
+}
+
+post_upgrade() {
+  echo ":: LinMBC: restart the daemon to use the new version:"
+  echo "     systemctl --user restart linmbc.service"
+}
+
+pre_remove() {
+  echo ":: LinMBC: stop the daemon before removing it:"
+  echo "     systemctl --user disable --now linmbc.service"
+}

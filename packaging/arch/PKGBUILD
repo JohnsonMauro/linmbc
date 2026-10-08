@@ -1,0 +1,46 @@
+# Maintainer: Johnson Mauro
+#
+# Builds the committed HEAD of this checkout (uncommitted changes are left out):
+#   cd packaging/arch && makepkg -si
+pkgname=linmbc
+pkgver=0.0.1.r5.g953bd3e
+pkgrel=1
+pkgdesc="Per-application mouse button remapping for Linux (Wayland first)"
+arch=(any)
+url="https://github.com/JohnsonMauro/linmbc"
+license=(MIT)
+depends=(python python-evdev pyside6 python-dbus python-gobject systemd)
+makedepends=(git python-build python-installer python-setuptools python-wheel)
+checkdepends=(python-pytest python-pytest-qt)
+optdepends=('kwin: switch profiles automatically by the focused window (KDE Plasma)')
+install=linmbc.install
+source=("linmbc::git+file://${startdir}/../..")
+sha256sums=(SKIP)
+
+pkgver() {
+  cd linmbc
+  local base
+  base=$(sed -n 's/^version = "\(.*\)"/\1/p' pyproject.toml)
+  printf '%s.r%s.g%s' "$base" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
+
+build() {
+  cd linmbc
+  python -m build --wheel --no-isolation
+}
+
+check() {
+  cd linmbc
+  PYTHONPATH="$PWD/src${PYTHONPATH:+:$PYTHONPATH}" python -m pytest -q
+}
+
+package() {
+  cd linmbc
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  install -Dm644 packaging/udev/70-linmbc.rules "$pkgdir/usr/lib/udev/rules.d/70-linmbc.rules"
+  install -Dm644 packaging/systemd/linmbc.service "$pkgdir/usr/lib/systemd/user/linmbc.service"
+  install -Dm644 packaging/linmbc.desktop "$pkgdir/usr/share/applications/linmbc.desktop"
+  install -Dm644 src/linmbc/icons/linmbc.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/linmbc.svg"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 src/linmbc/flags/LICENSE-flag-icons "$pkgdir/usr/share/licenses/$pkgname/LICENSE-flag-icons"
+}
