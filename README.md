@@ -14,6 +14,10 @@ LinMBC is an independent project and is not affiliated with Highrez.
 
 Website: <https://johnsonmauro.github.io/linmbc-site/>
 
+![LinMBC main window: a game profile with the side buttons remapped](docs/screenshot.png)
+
+<p align="center"><img src="docs/screenshot-button.png" width="460" alt="Button settings: keys, how a click sends them, and the delay"></p>
+
 ## What it does
 
 - Remaps the buttons of any evdev mouse to keys or key combos, per game.
@@ -128,7 +132,7 @@ mouse. `makepkg` packages the **committed** HEAD only: commit before building
 to include local changes.
 
 `scripts/gui_screenshots.py` renders the GUI in every language (offscreen,
-fake daemon) for the website. With the package installed, the GUI starts the packaged daemon through
+fake daemon) for the website and `docs/`. With the package installed, the GUI starts the packaged daemon through
 systemd; to run a checkout, stop the service and start `.venv/bin/linmbc-daemon`
 first.
 
