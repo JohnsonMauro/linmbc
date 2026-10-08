@@ -28,7 +28,7 @@ reference them from tracked code.
 | Virtual output | two uinput devices: a mouse (buttons + rel axes) and a keyboard (all keys), so the compositor classifies each normally |
 | Device support | any evdev mouse (relative pointer + buttons). Every physical mouse is grabbed automatically — no device picker (user: "the other macro tool just knows the mouse", 2026-10-07). Several mice and hotplug handled |
 | Languages | GUI in en, pt-BR, es, fr, de, ru, pl, ja, ko, zh-CN: the set ≥4 of 7 ARPGs ship on Steam (store API, 2026-10-07). JSON catalogs in `src/linmbc/locales/`; machine-translated, native review pending. Picker shows SVG flags vendored from lipis/flag-icons v7.5.0 (MIT, `src/linmbc/flags/`); English = US flag |
-| Games | "Add game" lists installed Steam games (`libraryfolders.vdf` + `appmanifest_*.acf`); match `steam_app_<appid>` |
+| Games | "Add profile" lists installed Steam games (`libraryfolders.vdf` + `appmanifest_*.acf`); match `steam_app_<appid>` |
 | Buttons sent as keyboard keys (Razer Naga keypad, firmware-programmed buttons) | opt-in per device only — see Security rules |
 | License | MIT (user, 2026-10-07). `pyproject.toml` declares it (PEP 639, setuptools ≥77) with the vendored flag-icons licence |
 | Distribution | Target: desktop distros with a graphical session. Only Arch/CachyOS is packaged and tested (`packaging/arch/PKGBUILD`, builds the committed HEAD of the checkout). Other distros stay pending until tested in a real environment |

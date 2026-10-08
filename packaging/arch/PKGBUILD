@@ -3,7 +3,7 @@
 # Builds the committed HEAD of this checkout (uncommitted changes are left out):
 #   cd packaging/arch && makepkg -si
 pkgname=linmbc
-pkgver=0.0.1.r5.g953bd3e
+pkgver=0.1.0a1
 pkgrel=1
 pkgdesc="Per-application mouse button remapping for Linux (Wayland first)"
 arch=(any)

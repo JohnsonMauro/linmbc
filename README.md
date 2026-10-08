@@ -8,8 +8,11 @@ for Windows.
 
 LinMBC is an independent project and is not affiliated with Highrez.
 
-> **Status:** early, but usable on KDE Plasma 6 (Wayland). Tested on CachyOS
-> with Last Epoch (Steam/Proton).
+> **Status:** alpha (0.1.0a1). Usable on KDE Plasma 6 (Wayland); tested on
+> CachyOS with Last Epoch (Steam/Proton). Expect rough edges and please
+> [report what breaks](https://github.com/JohnsonMauro/linmbc/issues).
+
+Website: <https://johnsonmauro.github.io/linmbc-site/>
 
 ## What it does
 
@@ -19,7 +22,7 @@ LinMBC is an independent project and is not affiliated with Highrez.
   delay.
 - Switches profiles automatically when the focused window changes (KDE
   Plasma). Outside a game the `Default` profile applies.
-- "Add game" lists your installed Steam games.
+- "Add profile" lists your installed Steam games and fills in the window match.
 - Every physical mouse is used automatically, including hotplug.
 - GUI in English, Português (Brasil), Español, Français, Deutsch, Русский,
   Polski, 日本語, 한국어 and 简体中文 (machine translated, review welcome).
@@ -122,7 +125,10 @@ python3 -m venv --system-site-packages .venv && .venv/bin/pip install -e '.[dev]
 
 The udev rule must be installed (or the package) for the daemon to open the
 mouse. `makepkg` packages the **committed** HEAD only: commit before building
-to include local changes. With the package installed, the GUI starts the packaged daemon through
+to include local changes.
+
+`scripts/gui_screenshots.py` renders the GUI in every language (offscreen,
+fake daemon) for the website. With the package installed, the GUI starts the packaged daemon through
 systemd; to run a checkout, stop the service and start `.venv/bin/linmbc-daemon`
 first.
 
