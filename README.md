@@ -132,7 +132,9 @@ mouse. `makepkg` packages the **committed** HEAD only: commit before building
 to include local changes.
 
 `scripts/gui_screenshots.py` renders the GUI in every language (offscreen,
-fake daemon) for the website and `docs/`. With the package installed, the GUI starts the packaged daemon through
+fake daemon) for the website and `docs/`.
+
+With the package installed, the GUI starts the packaged daemon through
 systemd; to run a checkout, stop the service and start `.venv/bin/linmbc-daemon`
 first.
 
