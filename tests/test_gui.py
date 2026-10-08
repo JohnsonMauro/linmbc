@@ -134,6 +134,14 @@ def test_status_shows_detected_mouse_and_focused_window(window):
     assert "firefox" in text
 
 
+def test_status_shows_the_focused_title_as_plain_text(window):
+    window.client.state_changed.emit(
+        state(window_class="steam_app_default", window_title="<b>Diablo IV</b>")
+    )
+    assert "steam_app_default — <b>Diablo IV</b>" in window.status.text()
+    assert window.status.textFormat() == Qt.TextFormat.PlainText
+
+
 def test_toggle_follows_state_without_echo_and_sends_clicks(window):
     window.client.state_changed.emit(state(enabled=True))
     assert window.toggle.isChecked() and window.toggle.text() == "On"

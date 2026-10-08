@@ -4,7 +4,7 @@ Methods (interface INTERFACE, object OBJECT_PATH on the session bus):
     GetState() -> s            JSON, see Service.state() plus "log_path"
     SetEnabled(b)
     SetDefaultProfile(s)       profile used outside games; "" = buttons unchanged
-    SetActiveWindow(ss)        window class, resource name (called by the KWin script)
+    SetActiveWindow(sss)       window class, resource name, title (called by the KWin script)
     ReloadProfiles()
     Quit()
 Signals:

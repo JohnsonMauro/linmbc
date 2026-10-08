@@ -132,6 +132,7 @@ class MainWindow(QMainWindow):
         self.toggle.setFont(bold)
         self.toggle.toggled.connect(self._toggled)
         self.status = QLabel()
+        self.status.setTextFormat(Qt.TextFormat.PlainText)  # window titles are not markup
         self.status.setWordWrap(True)
         self.language = QComboBox()
         self.language.setIconSize(QSize(FLAG_W, FLAG_H))
@@ -255,7 +256,9 @@ class MainWindow(QMainWindow):
         lines = [tr("status.mice", names=", ".join(mice)) if mice else tr("status.no_mouse")]
         if self.state.get("window_class"):
             profile = self._display_name(self.state.get("active_profile", ""))
-            lines.append(tr("status.window", window=self.state["window_class"], profile=profile))
+            parts = (self.state["window_class"], self.state.get("window_title"))
+            window = " — ".join(part for part in parts if part)
+            lines.append(tr("status.window", window=window, profile=profile))
         self.status.setText("\n".join(lines))
 
     def _display_name(self, name: str) -> str:

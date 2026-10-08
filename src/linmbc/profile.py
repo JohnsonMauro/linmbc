@@ -7,6 +7,10 @@
     BTN_SIDE = "KEY_1"                       # shorthand: hold, like a plain remap
     BTN_EXTRA = { keys = "KEY_LEFTCTRL+KEY_2", mode = "repeat", count = 5, delay_ms = [100, 900] }
 
+`match` entries name a window class or resource name. An entry starting with
+"title:" names the whole window title instead ("title:Diablo IV"), for games
+that share a class, like Lutris/umu ones (all `steam_app_default`).
+
 Modes: hold (key follows the button), once (one tap per click; delay = how
 long it stays down), toggle (tap every delay until clicked again), repeat
 (count taps, delay apart; clicking again cancels). delay_ms is a number or a
@@ -30,6 +34,7 @@ DEFAULT_DELAY_MS = 50
 MIN_TIMED_DELAY_MS = 10  # a tap shorter than this is easy for games to miss
 MAX_DELAY_MS = 60_000
 MAX_COUNT = 1000
+TITLE_PREFIX = "title:"
 
 
 class ProfileError(ValueError):
@@ -77,6 +82,13 @@ class Profile:
     name: str
     match: tuple[str, ...] = ()
     buttons: Mapping[int, Action] = field(default_factory=dict)
+
+
+def match_title(entry: str) -> str | None:
+    """The window title a `match` entry asks for, or None when it names a class."""
+    if entry[: len(TITLE_PREFIX)].lower() != TITLE_PREFIX:
+        return None
+    return entry[len(TITLE_PREFIX) :].strip()
 
 
 def profiles_dir() -> Path:

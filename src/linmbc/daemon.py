@@ -70,9 +70,9 @@ class DaemonObject(dbus.service.Object):
             raise dbus.exceptions.DBusException(str(exc), name=api.ERROR_INVALID) from exc
         self.after_call()
 
-    @dbus.service.method(api.INTERFACE, in_signature="ss", out_signature="")
-    def SetActiveWindow(self, window_class, resource_name):
-        self.service.set_active_window(str(window_class), str(resource_name))
+    @dbus.service.method(api.INTERFACE, in_signature="sss", out_signature="")
+    def SetActiveWindow(self, window_class, resource_name, title):
+        self.service.set_active_window(str(window_class), str(resource_name), str(title))
         self.after_call()
 
     @dbus.service.method(api.INTERFACE, in_signature="", out_signature="")

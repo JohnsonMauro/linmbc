@@ -27,6 +27,8 @@ Website: <https://johnsonmauro.github.io/linmbc-site/>
 - Switches profiles automatically when the focused window changes (KDE
   Plasma). Outside a game the `Default` profile applies.
 - "Add profile" lists your installed Steam games and fills in the window match.
+  Games that share a window class (Lutris ones are all `steam_app_default`)
+  can be matched by their window title instead: `title:Diablo IV`.
 - Every physical mouse is used automatically, including hotplug.
 - GUI in English, Português (Brasil), Español, Français, Deutsch, Русский,
   Polski, 日本語, 한국어 and 简体中文 (machine translated, review welcome).

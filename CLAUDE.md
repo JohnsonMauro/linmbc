@@ -18,7 +18,7 @@ reference them from tracked code.
 |---|---|
 | Language | Python + `python-evdev` for the engine |
 | GUI | PySide6 (Qt), fits KDE |
-| Profile switching | automatic by focused window: the daemon loads [`kwin/focus.js`](src/linmbc/kwin/focus.js) at runtime through `org.kde.KWin /Scripting` (no package install); it calls `SetActiveWindow(class, name)`. Profile `match` is compared to both, any case; else the `Default` profile. Manual override (tray / hotkey) later |
+| Profile switching | automatic by focused window: the daemon loads [`kwin/focus.js`](src/linmbc/kwin/focus.js) at runtime through `org.kde.KWin /Scripting` (no package install); it calls `SetActiveWindow(class, name, title)`, again when the focused window's title changes. Profile `match` is compared to class and name, any case; an entry `title:<text>` is compared to the whole title instead and wins over class matches (2026-10-08: Lutris/umu games without a umu id all get class `steam_app_default`, Battle.net launcher included); else the `Default` profile. Manual override (tray / hotkey) later |
 | Actions | per button: keys + mode `hold` / `once` / `toggle` (loop until clicked again) / `repeat` N, delay fixed or random `[min, max]` ms (decided with the user 2026-10-07). Shift layers and sequences later |
 | Process model | daemon (systemd user service) separate from the GUI, so mappings survive the GUI closing |
 | Profiles | TOML, one file per application, in `~/.config/linmbc/profiles/`. Read with `tomllib`, written by a small own serializer (no dependency) |

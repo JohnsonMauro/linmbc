@@ -141,6 +141,48 @@ def test_window_match_is_case_insensitive_and_also_checks_resource_name(tmp_path
     assert h.service.state()["active_profile"] == "PoE"
 
 
+def test_title_entry_matches_the_whole_title_in_any_case(tmp_path):
+    # Lutris/umu games without an id all get the class steam_app_default
+    h = Harness(tmp_path)
+    h.add_profile("Diablo IV", match=("title:Diablo IV",))
+    h.service.reload_profiles()
+    h.service.set_active_window("steam_app_default", "steam_app_default", "diablo iv")
+    assert h.service.state()["active_profile"] == "Diablo IV"
+    h.service.set_active_window("steam_app_default", "steam_app_default", "Battle.net")
+    assert h.service.state()["active_profile"] == ""
+    h.service.set_active_window("firefox", "firefox", "Diablo IV build guide — Mozilla Firefox")
+    assert h.service.state()["active_profile"] == ""
+
+
+def test_title_match_wins_over_class_match(tmp_path):
+    h = Harness(tmp_path)
+    h.add_profile("Battle.net", match=("steam_app_default",))
+    h.add_profile("Diablo IV", match=("title:Diablo IV",))
+    h.service.reload_profiles()
+    h.service.set_active_window("steam_app_default", "steam_app_default", "Diablo IV")
+    assert h.service.state()["active_profile"] == "Diablo IV"
+    h.service.set_active_window("steam_app_default", "steam_app_default", "Battle.net")
+    assert h.service.state()["active_profile"] == "Battle.net"
+
+
+def test_title_entry_is_not_compared_to_the_class(tmp_path):
+    h = Harness(tmp_path)
+    h.add_profile("Odd", match=("title:", "title:firefox"))
+    h.service.reload_profiles()
+    h.service.set_active_window("firefox", "firefox", "")
+    assert h.service.state()["active_profile"] == ""
+
+
+def test_title_changing_on_the_focused_window_switches_profile(tmp_path):
+    h = Harness(tmp_path)
+    h.add_profile("Diablo IV", match=("title:Diablo IV",))
+    h.service.reload_profiles()
+    h.service.set_active_window("steam_app_default", "steam_app_default", "Wine")
+    h.service.set_active_window("steam_app_default", "steam_app_default", "Diablo IV")
+    assert h.service.state()["active_profile"] == "Diablo IV"
+    assert h.service.state()["window_title"] == "Diablo IV"
+
+
 def test_no_default_profile_means_buttons_unchanged_outside_games(tmp_path):
     h = Harness(tmp_path)
     h.add_profile("Last Epoch", match=("steam_app_899770",))
