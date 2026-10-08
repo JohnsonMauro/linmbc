@@ -20,6 +20,18 @@ from PySide6.QtDBus import (
 
 from linmbc import dbus_api as api
 
+SYSTEMD_UNIT = "linmbc.service"
+
+
+def start_daemon() -> bool:
+    """Start the daemon through its systemd user unit; without one (a source checkout),
+    spawn it detached with this interpreter."""
+    # --no-block: the unit is Type=dbus, so a blocking start would wait for the bus name.
+    if QProcess.execute("systemctl", ["--user", "--no-block", "start", SYSTEMD_UNIT]) == 0:
+        return True
+    started, _pid = QProcess.startDetached(sys.executable, ["-m", "linmbc.daemon"])
+    return bool(started)
+
 
 class DaemonClient(QObject):
     state_changed = Signal(dict)
@@ -70,9 +82,7 @@ class DaemonClient(QObject):
         self._call("Quit", [])
 
     def start_daemon(self) -> bool:
-        """Start a detached daemon with this interpreter (dev setup; systemd later)."""
-        started, _pid = QProcess.startDetached(sys.executable, ["-m", "linmbc.daemon"])
-        return bool(started)
+        return start_daemon()
 
     # --- internals ---------------------------------------------------------
 
