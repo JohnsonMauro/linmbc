@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=70"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,8 +7,10 @@ name = "linmbc"
 version = "0.0.1"
 description = "Per-application mouse button remapping for Linux (Wayland first)"
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE", "src/linmbc/flags/LICENSE-flag-icons"]
 requires-python = ">=3.12"
-# Runtime deps come from system packages (python-evdev, pyside6); see CLAUDE.md.
+# Runtime deps come from system packages (python-evdev, pyside6, dbus-python, PyGObject).
 dependencies = []
 
 [project.optional-dependencies]
