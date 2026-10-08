@@ -49,8 +49,8 @@ Requirements: Python 3.12+, `python-evdev`, PySide6, `dbus-python`, PyGObject.
 ### Arch Linux / CachyOS
 
 Prebuilt package from the
-[latest release](https://github.com/JohnsonMauro/linmbc/releases/latest):
-download the `.pkg.tar.zst` (and its `.sha256`), then
+[releases page](https://github.com/JohnsonMauro/linmbc/releases) (alphas are
+pre-releases): download the `.pkg.tar.zst` and its `.sha256`, then
 
 ```bash
 sha256sum -c linmbc-*.pkg.tar.zst.sha256
