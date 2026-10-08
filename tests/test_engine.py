@@ -1,3 +1,4 @@
+import pytest
 from evdev import InputEvent
 from evdev import ecodes as e
 
@@ -103,6 +104,10 @@ class FakeInputDevice:
         self.path, self.fd = path, 42
         self.grabbed = self.closed = False
         self.batches = []
+        self.held = []
+
+    def active_keys(self):
+        return list(self.held)
 
     def grab(self):
         self.grabbed = True
@@ -135,6 +140,26 @@ def make_grab(monkeypatch):
     node = MouseNode("/dev/input/event8", "WL MOUSE", "36a7", "a868", frozenset())
     sink = FakeSink()
     return engine.GrabbedMouse(node, ActionRunner({e.BTN_SIDE: Action((e.KEY_1,))}), sink), sink
+
+
+def test_grab_is_refused_while_a_button_is_held(monkeypatch):
+    # The press already reached the compositor through the physical node; if
+    # the release is grabbed, the desktop keeps that button down (stuck click).
+    from linmbc import engine
+
+    devices = []
+
+    def opened(path):
+        device = FakeInputDevice(path)
+        device.held = [e.BTN_LEFT]
+        devices.append(device)
+        return device
+
+    monkeypatch.setattr(engine.evdev, "InputDevice", opened)
+    node = engine.MouseNode("/dev/input/event8", "WL MOUSE", "36a7", "a868", frozenset())
+    with pytest.raises(engine.ButtonsHeld):
+        engine.GrabbedMouse(node, ActionRunner({}), FakeSink())
+    assert devices[0].closed and not devices[0].grabbed
 
 
 def test_pump_with_no_pending_events_is_not_a_lost_device(monkeypatch):

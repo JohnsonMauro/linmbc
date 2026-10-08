@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (  # noqa: E402
 
 from linmbc import i18n  # noqa: E402
 from linmbc.games import Game  # noqa: E402
-from linmbc.gui.game_dialog import GameDialog  # noqa: E402
+from linmbc.gui.game_dialog import GameDialog, SeenWindow  # noqa: E402
 from linmbc.gui.main_window import COLUMNS, DEFAULT_PROFILE, MainWindow  # noqa: E402
 from linmbc.gui.mapping_dialog import MODES, MappingDialog  # noqa: E402
 from linmbc.gui.settings import GuiSettings, load_settings  # noqa: E402
@@ -443,6 +443,45 @@ def test_game_dialog_other_application_needs_name_and_window(qtbot):
     assert dlg.chosen() == Game("Grim Dawn", ("steam_app_219990", "grim dawn.exe"))
 
 
+DIABLO = SeenWindow("steam_app_default", "steam_app_default", "Diablo IV")
+SEEN = [
+    DIABLO,
+    SeenWindow("steam_app_899770", "last epoch.exe", "Last Epoch"),
+    SeenWindow("linmbc", "python3.14", "LinMBC"),
+]
+
+
+def test_game_dialog_fills_other_application_from_a_seen_window(qtbot):
+    dlg = GameDialog([LAST_EPOCH], taken=set(), seen=SEEN)
+    qtbot.addWidget(dlg)
+    assert [dlg.seen.item(r).text() for r in range(dlg.seen.count())] == [
+        "Diablo IV — steam_app_default",
+        "Last Epoch — steam_app_899770",
+    ]  # LinMBC itself is left out
+    dlg.seen.setCurrentRow(0)
+    assert dlg.other.isChecked()
+    assert (dlg.name.text(), dlg.window.text()) == ("Diablo IV", "Diablo IV")  # shared class
+    dlg.seen.setCurrentRow(1)
+    assert dlg.chosen() == Game("Last Epoch", ("steam_app_899770",))
+
+
+def test_game_dialog_hides_the_seen_list_when_nothing_was_seen(qtbot):
+    dlg = GameDialog([], taken=set())
+    qtbot.addWidget(dlg)
+    assert dlg.seen.isHidden() and dlg.seen_label.isHidden()
+
+
+def test_main_window_reads_seen_windows_from_state(window):
+    window.client.state_changed.emit(
+        state(
+            recent_windows=[
+                {"class": "steam_app_default", "name": "steam_app_default", "title": "Diablo IV"}
+            ]
+        )
+    )
+    assert window.seen_windows() == [DIABLO]
+
+
 def test_dialog_accepts_letters_pressed_together_and_has_help(dialog):
     dialog.keys.setText("er")
     assert dialog.result_action() == Action((e.KEY_E, e.KEY_R))
@@ -507,7 +546,7 @@ def test_main_window_and_dialogs_never_cut_text(qtbot, tmp_path, language):
     assert clipped_labels(win) == []
 
     games = [LAST_EPOCH, Game("Path of Exile 2", ("steam_app_2694490",))]
-    dlg = GameDialog(games, taken={"Last Epoch"})
+    dlg = GameDialog(games, taken={"Last Epoch"}, seen=SEEN)
     qtbot.addWidget(dlg)
     dlg.show()
     dlg.games.setCurrentRow(0)

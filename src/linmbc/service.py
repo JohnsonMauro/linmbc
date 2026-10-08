@@ -1,9 +1,9 @@
 """Daemon logic without IPC or event loop: grab the mice, pick the profile, run actions.
 
 Every physical mouse is grabbed while enabled. The profile in effect is the one
-whose `match` names the focused window (class or resource name, any case; a
-"title:" entry names the whole title and wins over class matches), else the
-default profile. Devices, grabs and the uinput sink come in as
+whose `match` names the focused window (class, resource name or whole title,
+any case; a title match wins over a class match, and a "title:" entry is
+compared to the title only), else the default profile. Devices, grabs and the uinput sink come in as
 arguments so every rule here is unit-tested with fakes.
 
 Failure policy is fail-open: on an unexpected error every grab is released, so
@@ -21,9 +21,13 @@ from evdev.ecodes import BTN_LEFT, BTN_TASK
 from linmbc.actions import ActionRunner
 from linmbc.config import load_config, save_config
 from linmbc.devices import MouseNode
-from linmbc.engine import ButtonRecord, latency_seconds
+from linmbc.engine import ButtonRecord, ButtonsHeld, latency_seconds
 from linmbc.keys import name_of
 from linmbc.profile import Action, Profile, ProfileError, load, match_title
+
+RECENT_WINDOWS = 15  # focused windows offered by "Add profile"
+
+Window = tuple[str, str, str]  # class, resource name, title
 
 
 class Grab(Protocol):
@@ -60,9 +64,11 @@ class Service:
         self._on_change = on_change
         self._config = load_config(config_path)
         self._profiles: dict[str, Profile] = {}
-        self._window: tuple[str, str, str] = ("", "", "")  # class, name, title
+        self._window: Window = ("", "", "")
+        self._recent: list[Window] = []  # newest first; kept in memory, never logged
         self._active = ""  # profile in effect right now
         self._grabs: dict[str, Grab] = {}
+        self._waiting: set[str] = set()  # mice not grabbed yet: a button was held
         self._detected: list[MouseNode] = []
         self._sink: Any = None
 
@@ -98,6 +104,7 @@ class Service:
         if window == self._window:
             return
         self._window = window
+        self._remember(window)
         self._choose_profile(reapply=False)
 
     def reload_profiles(self) -> None:
@@ -169,6 +176,7 @@ class Service:
             "active_profile": self._active,
             "window_class": self._window[0],
             "window_title": self._window[2],
+            "recent_windows": [{"class": c, "name": n, "title": t} for c, n, t in self._recent],
             "profiles": [{"name": p.name, "match": list(p.match)} for p in self._profiles.values()],
             # what the user thinks of as "the mouse": detected (grabbed or not), minus
             # the mouse function of keyboards, which is grabbed but not configured here
@@ -191,6 +199,14 @@ class Service:
         codes = set().union(*(node.keys for node in mice)) if mice else set()
         return sorted(c for c in codes if BTN_LEFT <= c <= BTN_TASK)
 
+    def _remember(self, window: Window) -> None:
+        if not window[0]:
+            return
+        recent = [w for w in self._recent if w != window]
+        if recent and recent[0][:2] == window[:2]:
+            recent = recent[1:]  # the focused window renamed itself (or a browser tab changed)
+        self._recent = [window, *recent][:RECENT_WINDOWS]
+
     def _profile_for_window(self) -> str:
         window_class, resource_name, title = self._window
         names = {n.lower() for n in (window_class, resource_name) if n}
@@ -200,9 +216,10 @@ class Service:
             for entry in profile.match:
                 wanted = match_title(entry)
                 if wanted is None:
-                    if not by_class and entry.lower() in names:
+                    wanted = entry.strip()
+                    if not by_class and wanted.lower() in names:
                         by_class = profile.name
-                elif wanted and wanted.lower() == title:
+                if wanted and wanted.lower() == title:
                     return profile.name
         if by_class:
             return by_class
@@ -254,9 +271,15 @@ class Service:
         runner = ActionRunner(self._actions())
         try:
             grab = self._grab_factory(node, runner, self._sink)
+        except ButtonsHeld:
+            if node.key not in self._waiting:
+                self._waiting.add(node.key)
+                self._log(f"{node.name}: waiting until every button is released to grab it")
+            return
         except OSError as exc:
             self._log(f"{node.name}: cannot grab {node.path} ({exc})")
             return
+        self._waiting.discard(node.key)
         self._grabs[node.key] = grab
         self._log(f"{node.name}: grabbed {node.path}")
 

@@ -140,6 +140,14 @@ class UInputSink:
             device.close()
 
 
+class ButtonsHeld(OSError):
+    """A button or key is down: grabbing now would swallow its release.
+
+    The press already reached the compositor through the physical node, so the
+    desktop would keep that button down (a stuck click) until the next grab.
+    """
+
+
 class GrabbedMouse:
     """One physical mouse, grabbed exclusively; its frames go through its translator."""
 
@@ -150,6 +158,11 @@ class GrabbedMouse:
         self._device = evdev.InputDevice(node.path)
         try:
             self._device.grab()
+            # checked after grabbing, so a press racing the grab is seen too
+            held = self._device.active_keys()
+            if held:
+                self._device.ungrab()
+                raise ButtonsHeld(f"{len(held)} button(s) held")
         except OSError:
             self._device.close()
             raise

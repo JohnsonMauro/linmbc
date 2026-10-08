@@ -29,7 +29,7 @@ from PySide6.QtWidgets import (
 
 from linmbc import i18n
 from linmbc.games import Game, installed_steam_games
-from linmbc.gui.game_dialog import GameDialog
+from linmbc.gui.game_dialog import GameDialog, SeenWindow
 from linmbc.gui.mapping_dialog import STANDARD_BUTTONS, MappingDialog, button_label
 from linmbc.gui.mouse_icons import button_icon
 from linmbc.gui.profile_list import ProfileList
@@ -282,12 +282,18 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def _add_profile(self) -> None:
-        dialog = GameDialog(self.games(), set(self.store.list()), self)
+        dialog = GameDialog(self.games(), set(self.store.list()), self, self.seen_windows())
         if dialog.exec() != GameDialog.DialogCode.Accepted:
             return
         game = dialog.chosen()
         if game is not None and self._save(Profile(name=game.name, match=game.match), None):
             self._fill_profiles(select=game.name)
+
+    def seen_windows(self) -> list[SeenWindow]:
+        return [
+            SeenWindow(str(w.get("class", "")), str(w.get("name", "")), str(w.get("title", "")))
+            for w in self.state.get("recent_windows") or []
+        ]
 
     @Slot(str)
     def _remove_profile(self, name: str) -> None:

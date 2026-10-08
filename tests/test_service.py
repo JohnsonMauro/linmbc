@@ -3,9 +3,9 @@ from evdev import ecodes as e
 
 from linmbc.config import Config, load_config
 from linmbc.devices import MouseNode
-from linmbc.engine import ButtonRecord
+from linmbc.engine import ButtonRecord, ButtonsHeld
 from linmbc.profile import Action, Mode, Profile, save
-from linmbc.service import Service
+from linmbc.service import RECENT_WINDOWS, Service
 
 WL = MouseNode("/dev/input/event8", "WL MOUSE", "36a7", "a868", frozenset())
 KC = MouseNode("/dev/input/event3", "Keychron Mouse", "3434", "0d80", frozenset())
@@ -50,6 +50,7 @@ class Harness:
         self.logs = []
         self.buttons = []
         self.sinks = 0
+        self.held = set()  # nodes whose buttons are down when grabbed
         self.config_path = tmp_path / "config.toml"
         self.profiles = tmp_path / "profiles"
         self.service = Service(
@@ -63,6 +64,8 @@ class Harness:
         )
 
     def _grab(self, node, runner, sink):
+        if node in self.held:
+            raise ButtonsHeld(f"{node.path}: a button is held")
         grab = FakeGrab(node, runner, sink)
         self.grabs.append(grab)
         return grab
@@ -93,6 +96,18 @@ def test_enable_grabs_every_physical_mouse(tmp_path):
     h.service.set_enabled(True)
     assert {g.node for g in h.open_grabs()} == {WL, KC}
     assert h.sinks == 1
+
+
+def test_mouse_with_a_button_held_is_grabbed_at_a_later_rescan(tmp_path):
+    h = Harness(tmp_path, mice=[WL])
+    h.held = {WL}
+    h.service.set_enabled(True)
+    h.service.rescan()
+    assert h.open_grabs() == []
+    assert len([line for line in h.logs if "released" in line and "wait" in line]) == 1
+    h.held = set()
+    h.service.rescan()
+    assert [g.node for g in h.open_grabs()] == [WL]
 
 
 def test_disable_releases_every_grab(tmp_path):
@@ -165,6 +180,17 @@ def test_title_match_wins_over_class_match(tmp_path):
     assert h.service.state()["active_profile"] == "Battle.net"
 
 
+def test_plain_entry_also_matches_the_whole_title_and_the_title_wins(tmp_path):
+    h = Harness(tmp_path)
+    h.add_profile("Battle.net", match=("steam_app_default",))
+    h.add_profile("Diablo IV", match=("diablo iv",))
+    h.service.reload_profiles()
+    h.service.set_active_window("steam_app_default", "steam_app_default", "Diablo IV")
+    assert h.service.state()["active_profile"] == "Diablo IV"
+    h.service.set_active_window("firefox", "firefox", "Diablo IV build guide — Mozilla Firefox")
+    assert h.service.state()["active_profile"] == ""
+
+
 def test_title_entry_is_not_compared_to_the_class(tmp_path):
     h = Harness(tmp_path)
     h.add_profile("Odd", match=("title:", "title:firefox"))
@@ -181,6 +207,27 @@ def test_title_changing_on_the_focused_window_switches_profile(tmp_path):
     h.service.set_active_window("steam_app_default", "steam_app_default", "Diablo IV")
     assert h.service.state()["active_profile"] == "Diablo IV"
     assert h.service.state()["window_title"] == "Diablo IV"
+
+
+def test_state_lists_recent_windows_newest_first_without_repeats(tmp_path):
+    h = Harness(tmp_path)
+    h.service.set_active_window("steam_app_default", "steam_app_default", "Wine")
+    h.service.set_active_window("steam_app_default", "steam_app_default", "Diablo IV")  # renamed
+    h.service.set_active_window("firefox", "firefox", "Guide")
+    h.service.set_active_window("steam_app_default", "steam_app_default", "Diablo IV")
+    assert h.service.state()["recent_windows"] == [
+        {"class": "steam_app_default", "name": "steam_app_default", "title": "Diablo IV"},
+        {"class": "firefox", "name": "firefox", "title": "Guide"},
+    ]
+
+
+def test_recent_windows_are_capped(tmp_path):
+    h = Harness(tmp_path)
+    for i in range(RECENT_WINDOWS + 5):
+        h.service.set_active_window(f"app{i}", "x", "")
+    recent = h.service.state()["recent_windows"]
+    assert len(recent) == RECENT_WINDOWS
+    assert recent[0]["class"] == f"app{RECENT_WINDOWS + 4}"
 
 
 def test_no_default_profile_means_buttons_unchanged_outside_games(tmp_path):

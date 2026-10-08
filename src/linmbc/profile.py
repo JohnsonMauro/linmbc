@@ -7,9 +7,10 @@
     BTN_SIDE = "KEY_1"                       # shorthand: hold, like a plain remap
     BTN_EXTRA = { keys = "KEY_LEFTCTRL+KEY_2", mode = "repeat", count = 5, delay_ms = [100, 900] }
 
-`match` entries name a window class or resource name. An entry starting with
-"title:" names the whole window title instead ("title:Diablo IV"), for games
-that share a class, like Lutris/umu ones (all `steam_app_default`).
+`match` entries name a window class, resource name or whole title, any case
+("steam_app_899770", "Diablo IV"). A title match wins over a class match, for
+games that share a class, like Lutris/umu ones (all `steam_app_default`). An
+entry starting with "title:" is compared to the title only.
 
 Modes: hold (key follows the button), once (one tap per click; delay = how
 long it stays down), toggle (tap every delay until clicked again), repeat
@@ -85,7 +86,7 @@ class Profile:
 
 
 def match_title(entry: str) -> str | None:
-    """The window title a `match` entry asks for, or None when it names a class."""
+    """The title a "title:" entry asks for, or None for a plain entry."""
     if entry[: len(TITLE_PREFIX)].lower() != TITLE_PREFIX:
         return None
     return entry[len(TITLE_PREFIX) :].strip()
